@@ -1,0 +1,134 @@
+// Prisma schema for PERN migration (PostgreSQL via Neon)
+// Update DATABASE_URL in your .env to point to Neon
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum OrderStatus {
+  ORDER_PLACED
+  PROCESSING
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id         String   @id
+  name       String
+  email      String   @unique
+  imageUrl   String
+  cartItems  Json?
+  seller     Boolean  @default(false)
+
+  products   Product[]
+  orders     Order[]
+  addresses  Address[]
+  reviews    Review[]
+}
+
+model Product {
+  id            Int       @id @default(autoincrement())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  name          String
+  description   String
+  price         Float
+  category      String
+  offerPrice    Float
+  images        String[]  // Postgres array of text
+  date          BigInt
+  ratingAverage Float     @default(0)
+  ratingCount   Int       @default(0)
+
+  reviews       Review[]
+  orderItems    OrderItem[]
+
+  @@index([userId])
+}
+
+model Review {
+  id               Int       @id @default(autoincrement())
+  productId        Int
+  product          Product   @relation(fields: [productId], references: [id])
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  userName         String
+  rating           Int
+  comment          String
+  verifiedPurchase Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([productId])
+  @@index([userId])
+}
+
+model Address {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  fullName    String
+  phoneNumber String
+  city        String
+  state       String
+  pincode     String
+  area        String
+
+  orders      Order[]
+
+  @@index([userId])
+}
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  amount    Float
+  addressId Int
+  address   Address     @relation(fields: [addressId], references: [id])
+  status    OrderStatus @default(ORDER_PLACED)
+  date      BigInt
+
+  items     OrderItem[]
+
+  @@index([userId])
+  @@index([addressId])
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Newsletter {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  subscribedAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model Promo {
+  id           Int       @id @default(autoincrement())
+  code         String    @unique
+  discount     Int
+  allowedUsers String[]  // list of allowed user IDs
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime?
+}

@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "types": [
+      "node",
+      "aws-lambda",
+      "bunyan",
+      "connect",
+      "debug",
+      "memcached",
+      "ms",
+      "mysql",
+      "oracledb",
+      "pg",
+      "pg-pool",
+      "tedious"
+    ]
+  }
+}

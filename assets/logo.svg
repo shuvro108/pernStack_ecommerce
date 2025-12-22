@@ -1,0 +1,8 @@
+<svg width="180" height="40" viewBox="0 0 180 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Favicon Icon Background -->
+  <rect x="2" y="10" width="20" height="20" rx="3" fill="#059669"/>
+  <!-- Icon Text -->
+  <text x="12" y="24" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="800" fill="white" text-anchor="middle">T</text>
+  <!-- Logo Text -->
+  <text x="28" y="28" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#1f2937">TerraCotta</text>
+</svg>
