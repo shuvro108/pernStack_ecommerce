@@ -34,7 +34,7 @@ export async function POST(request) {
       return handleError("Invalid request body - JSON parse failed", 400);
     }
 
-    const { items, address } = requestBody;
+    const { items, address, promoCode, discountAmount } = requestBody;
 
     // 3. Validate address
     const addressIdNum = validateNumericId(address);
@@ -126,6 +126,14 @@ export async function POST(request) {
     const taxAmount = Math.floor(amount * 0.02);
     const totalAmount = amount + taxAmount;
 
+    // Validate and sanitize promo data
+    const sanitizedPromoCode = promoCode
+      ? String(promoCode).trim().toUpperCase()
+      : null;
+    const sanitizedDiscountAmount = discountAmount
+      ? Math.max(0, Number(discountAmount))
+      : 0;
+
     // 11. Attempt to queue order in Inngest
     let createdOrder = null;
 
@@ -139,6 +147,8 @@ export async function POST(request) {
           amount: totalAmount,
           addressId: addressIdNum,
           date: Date.now(),
+          promoCode: sanitizedPromoCode,
+          discountAmount: sanitizedDiscountAmount,
         },
       });
 
@@ -162,6 +172,8 @@ export async function POST(request) {
               addressId: addressIdNum,
               date: BigInt(Date.now()),
               status: "ORDER_PLACED",
+              promoCode: sanitizedPromoCode,
+              discountAmount: sanitizedDiscountAmount,
               items: {
                 create: validatedItems.map((it) => ({
                   productId: it.product,
@@ -193,6 +205,8 @@ export async function POST(request) {
               addressId: addressIdNum,
               date: BigInt(Date.now()),
               status: "ORDER_PLACED",
+              promoCode: sanitizedPromoCode,
+              discountAmount: sanitizedDiscountAmount,
               items: {
                 create: validatedItems.map((it) => ({
                   productId: it.product,

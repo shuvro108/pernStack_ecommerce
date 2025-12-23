@@ -16,6 +16,12 @@ const OrderSummary = () => {
     cartItems,
     setCartItems,
   } = useAppContext();
+  const {
+    getCartSubtotalBeforePromo,
+    appliedPromoCode,
+    promoDiscountPercent,
+    setAppliedPromo: setAppliedPromoCtx,
+  } = useAppContext();
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -46,13 +52,14 @@ const OrderSummary = () => {
     return promo ? promo.discount : null;
   };
 
-  const subtotal = getCartAmount();
-  const promoDiscount = appliedPromo ? getPromoDiscount(appliedPromo) : null;
-  const discountAmount = promoDiscount
-    ? Math.floor((subtotal * promoDiscount) / 100)
+  const subtotalBeforePromo = getCartSubtotalBeforePromo();
+  const roundedSubtotal = Math.round(subtotalBeforePromo);
+  const rawDiscount = appliedPromoCode
+    ? (roundedSubtotal * (promoDiscountPercent || 0)) / 100
     : 0;
-  const taxableAmount = Math.max(subtotal - discountAmount, 0);
-  const taxAmount = Math.floor(taxableAmount * 0.02);
+  const discountAmount = Math.min(roundedSubtotal, Math.round(rawDiscount));
+  const taxableAmount = Math.max(roundedSubtotal - discountAmount, 0);
+  const taxAmount = Math.round(taxableAmount * 0.02);
   const totalAmount = taxableAmount + taxAmount;
 
   const applyPromo = () => {
@@ -67,11 +74,13 @@ const OrderSummary = () => {
       setAppliedPromo(null);
       return;
     }
-    if (subtotal <= 0) {
+    if (roundedSubtotal <= 0) {
       toast.error("Add items to your cart before applying a code.");
       return;
     }
     setAppliedPromo(code);
+    // Persist promo selection in global context so cart & totals update
+    setAppliedPromoCtx(code, discount);
     toast.success(`Promo ${code} applied: ${discount}% off`);
   };
 
@@ -132,6 +141,8 @@ const OrderSummary = () => {
           items: cartItemsArray,
           // Prisma addresses use `id`, not `_id`
           address: selectedAddress.id,
+          promoCode: appliedPromoCode || null,
+          discountAmount: discountAmount,
         },
         {
           headers: {
@@ -238,13 +249,13 @@ const OrderSummary = () => {
               type="button"
               onClick={applyPromo}
               className="btn btn-primary px-9 py-2"
-              disabled={subtotal <= 0}
+              disabled={subtotalBeforePromo <= 0}
             >
-              {appliedPromo ? "Applied" : "Apply"}
+              {appliedPromoCode ? "Applied" : "Apply"}
             </button>
-            {appliedPromo && (
+            {appliedPromoCode && (
               <p className="text-sm text-emerald-700">
-                {appliedPromo} applied · {getPromoDiscount(appliedPromo)}% off
+                {appliedPromoCode} applied · {promoDiscountPercent}% off
               </p>
             )}
           </div>
@@ -257,12 +268,12 @@ const OrderSummary = () => {
             <p className="uppercase text-gray-600">Items {getCartCount()}</p>
             <p className="text-gray-800">
               {currency}
-              {subtotal}
+              {roundedSubtotal}
             </p>
           </div>
-          {appliedPromo && discountAmount > 0 && (
+          {appliedPromoCode && discountAmount > 0 && (
             <div className="flex justify-between text-sm text-emerald-700">
-              <p>Promo discount ({getPromoDiscount(appliedPromo)}%)</p>
+              <p>Promo discount ({promoDiscountPercent}%)</p>
               <p>
                 -{currency}
                 {discountAmount}

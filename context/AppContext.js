@@ -23,6 +23,8 @@ export const AppContextProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [currency, setCurrency] = useState("৳");
   const [isSeller, setIsSeller] = useState(false);
+  const [appliedPromoCode, setAppliedPromoCode] = useState(null);
+  const [promoDiscountPercent, setPromoDiscountPercent] = useState(0);
 
   // Fetch products from API
   const fetchProductData = async () => {
@@ -164,14 +166,43 @@ export const AppContextProvider = ({ children }) => {
   // Get cart total
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => {
-      const price = item.product?.offerPrice || item.product?.price || 0;
-      return total + price * (item.quantity || 0);
+      const base = item.product?.offerPrice || item.product?.price || 0;
+      const qty = item.quantity || 0;
+      const discounted =
+        promoDiscountPercent > 0
+          ? Number((base * (1 - promoDiscountPercent / 100)).toFixed(2))
+          : base;
+      return total + discounted * qty;
     }, 0);
   };
 
   // Get cart amount (alias for getCartTotal for backward compatibility)
   const getCartAmount = () => {
     return getCartTotal();
+  };
+
+  const getCartSubtotalBeforePromo = () => {
+    return cartItems.reduce((total, item) => {
+      const price = item.product?.offerPrice || item.product?.price || 0;
+      return total + price * (item.quantity || 0);
+    }, 0);
+  };
+
+  const getEffectiveUnitPrice = (product) => {
+    const base = product?.offerPrice || product?.price || 0;
+    return promoDiscountPercent > 0
+      ? Number((base * (1 - promoDiscountPercent / 100)).toFixed(2))
+      : base;
+  };
+
+  const setAppliedPromo = (code, percent) => {
+    setAppliedPromoCode(code || null);
+    setPromoDiscountPercent(Math.max(0, Number(percent) || 0));
+  };
+
+  const clearAppliedPromo = () => {
+    setAppliedPromoCode(null);
+    setPromoDiscountPercent(0);
   };
 
   // Initialize on mount
@@ -198,6 +229,12 @@ export const AppContextProvider = ({ children }) => {
     getCartCount,
     getCartTotal,
     getCartAmount,
+    getCartSubtotalBeforePromo,
+    getEffectiveUnitPrice,
+    appliedPromoCode,
+    promoDiscountPercent,
+    setAppliedPromo,
+    clearAppliedPromo,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

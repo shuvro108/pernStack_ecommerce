@@ -308,10 +308,18 @@ const Orders = () => {
                           <span>{statusInfo.icon}</span>
                           {order.status}
                         </span>
-                        <span className="text-lg font-bold text-gray-900">
-                          {currency}
-                          {order.amount}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="text-lg font-bold text-gray-900">
+                            {currency}
+                            {order.displayAmount ?? order.amount}
+                          </span>
+                          {order.promoCode && order.discountAmount > 0 && (
+                            <span className="text-xs text-emerald-600 font-semibold">
+                              Promo: {order.promoCode} (-{currency}
+                              {order.discountAmount})
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 

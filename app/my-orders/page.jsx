@@ -204,10 +204,18 @@ const MyOrders = () => {
                     <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
                       Order Total
                     </p>
-                    <p className="text-2xl font-bold text-emerald-600">
-                      {currency}
-                      {order.amount}
-                    </p>
+                    <div className="space-y-1">
+                      <p className="text-2xl font-bold text-emerald-600">
+                        {currency}
+                        {order.displayAmount ?? order.amount}
+                      </p>
+                      {order.promoCode && order.discountAmount > 0 && (
+                        <p className="text-sm text-emerald-600">
+                          Promo: {order.promoCode} (-{currency}
+                          {order.discountAmount})
+                        </p>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-600">
                       Payment Method: <span className="font-semibold">COD</span>
                     </p>

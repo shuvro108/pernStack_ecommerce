@@ -74,14 +74,34 @@ export async function GET(request) {
     const sanitizedOrders = orders
       .map((order) => {
         try {
+          // Recompute subtotal from items to derive display totals with promo
+          const recomputedSubtotal = Array.isArray(order.items)
+            ? order.items.reduce((sum, it) => {
+                const p = it.product;
+                const price = p ? Number(p.offerPrice || p.price || 0) : 0;
+                const qty = Number(it.quantity || 0);
+                return sum + price * qty;
+              }, 0)
+            : 0;
+          const roundedSubtotal = Math.round(recomputedSubtotal);
+          const discount = Math.min(
+            roundedSubtotal,
+            Math.round(Number(order.discountAmount) || 0)
+          );
+          const taxable = Math.max(roundedSubtotal - discount, 0);
+          const tax = Math.round(taxable * 0.02);
+          const displayTotal = taxable + tax;
           return {
             id: Number(order.id) || null,
             userId: order.userId || null,
             amount: Number(order.amount) || 0,
+            displayAmount: displayTotal,
             addressId: Number(order.addressId) || null,
             status:
               STATUS_TO_DISPLAY[order.status] || order.status || "Unknown",
             date: String(order.date || ""),
+            promoCode: order.promoCode || null,
+            discountAmount: Number(order.discountAmount) || 0,
             address: order.address
               ? {
                   id: Number(order.address.id) || null,

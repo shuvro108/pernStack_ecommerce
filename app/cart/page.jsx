@@ -163,7 +163,11 @@ const Cart = () => {
                         </div>
                       </td>
                       <td className="py-3 md:px-4 px-1 text-gray-600">
-                        ৳{(product.offerPrice * item.quantity).toFixed(2)}
+                        ৳
+                        {(
+                          Number(product.offerPrice || product.price || 0) *
+                          (item.quantity || 0)
+                        ).toFixed(2)}
                       </td>
                     </tr>
                   );

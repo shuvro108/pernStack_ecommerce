@@ -91,6 +91,8 @@ export const createUserOrder = inngest.createFunction(
         amount: event.data.amount,
         address: event.data.address,
         date: event.data.date,
+        promoCode: event.data.promoCode || null,
+        discountAmount: event.data.discountAmount || 0,
       };
     });
     await connectDB();
@@ -104,6 +106,8 @@ export const createUserOrder = inngest.createFunction(
             : undefined,
           date: BigInt(o.date),
           status: "ORDER_PLACED",
+          promoCode: o.promoCode,
+          discountAmount: o.discountAmount,
           items: {
             create: o.items.map((it) => ({
               productId: Number(it.product),

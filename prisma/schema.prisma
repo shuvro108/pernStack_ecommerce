@@ -88,16 +88,18 @@ model Address {
 }
 
 model Order {
-  id        Int         @id @default(autoincrement())
-  userId    String
-  user      User        @relation(fields: [userId], references: [id])
-  amount    Float
-  addressId Int
-  address   Address     @relation(fields: [addressId], references: [id])
-  status    OrderStatus @default(ORDER_PLACED)
-  date      BigInt
+  id            Int         @id @default(autoincrement())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  amount        Float
+  addressId     Int
+  address       Address     @relation(fields: [addressId], references: [id])
+  status        OrderStatus @default(ORDER_PLACED)
+  date          BigInt
+  promoCode     String?     // Applied promo code
+  discountAmount Float       @default(0)  // Discount amount in currency
 
-  items     OrderItem[]
+  items         OrderItem[]
 
   @@index([userId])
   @@index([addressId])
