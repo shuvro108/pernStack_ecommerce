@@ -115,7 +115,7 @@ export const AppContextProvider = ({ children }) => {
   };
 
   // Update cart quantity (absolute set)
-  const updateCartQuantity = async (cartItemId, quantity) => {
+  const updateCartQuantity = async (cartItemId, quantity, productId) => {
     if (!cartItemId) {
       console.error("updateCartQuantity called with empty cartItemId");
       toast.error("Item ID is missing");
@@ -131,11 +131,16 @@ export const AppContextProvider = ({ children }) => {
     );
 
     try {
-      const { data } = await axios.post(
-        "/api/cart/update",
-        { cartItemId: cleanId, quantity },
-        { withCredentials: true }
-      );
+      const requestBody = { cartItemId: cleanId, quantity };
+
+      // If productId is provided, include it for better tracking
+      if (productId) {
+        requestBody.productId = String(productId);
+      }
+
+      const { data } = await axios.post("/api/cart/update", requestBody, {
+        withCredentials: true,
+      });
       if (data?.success) {
         console.log(
           "[updateCartQuantity] Success, items count:",

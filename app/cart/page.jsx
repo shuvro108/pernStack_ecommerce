@@ -67,7 +67,9 @@ const Cart = () => {
                         >
                           Product not found.{" "}
                           <button
-                            onClick={() => updateCartQuantity(item._id, 0)}
+                            onClick={() =>
+                              updateCartQuantity(item._id, 0, item.productId)
+                            }
                             className="text-xs underline"
                           >
                             Remove
@@ -92,7 +94,9 @@ const Cart = () => {
                           </div>
                           <button
                             className="md:hidden text-xs text-emerald-900 mt-1"
-                            onClick={() => updateCartQuantity(item._id, 0)}
+                            onClick={() =>
+                              updateCartQuantity(item._id, 0, item.product?._id)
+                            }
                           >
                             Remove
                           </button>
@@ -101,7 +105,9 @@ const Cart = () => {
                           <p className="text-gray-800">{product.name}</p>
                           <button
                             className="text-xs text-emerald-900 mt-1"
-                            onClick={() => updateCartQuantity(item._id, 0)}
+                            onClick={() =>
+                              updateCartQuantity(item._id, 0, item.product?._id)
+                            }
                           >
                             Remove
                           </button>
@@ -116,7 +122,8 @@ const Cart = () => {
                             onClick={async () =>
                               await updateCartQuantity(
                                 item._id,
-                                item.quantity - 1
+                                item.quantity - 1,
+                                item.product?._id
                               )
                             }
                           >
@@ -130,7 +137,8 @@ const Cart = () => {
                             onChange={async (e) =>
                               await updateCartQuantity(
                                 item._id,
-                                Number(e.target.value)
+                                Number(e.target.value),
+                                item.product?._id
                               )
                             }
                             type="number"
@@ -141,7 +149,8 @@ const Cart = () => {
                             onClick={async () =>
                               await updateCartQuantity(
                                 item._id,
-                                item.quantity + 1
+                                item.quantity + 1,
+                                item.product?._id
                               )
                             }
                           >

@@ -107,26 +107,21 @@ export async function POST(request) {
     }
 
     if (productId) {
-      // Incremental add (Add to Cart button)
+      // Absolute set (quantity input / remove) - same as cartItemId mode
       const prodId = validateNumericId(productId);
       if (prodId === false) {
         return handleError("Invalid product ID", 400);
       }
 
       const cleanId = String(prodId);
-      const currentQty = cart[cleanId] || 0;
-      const nextQty = currentQty + quantityNum;
-
-      if (nextQty <= 0) {
+      if (quantityNum <= 0) {
         delete cart[cleanId];
         console.log("[cart/update] Removed product:", { prodId });
-      } else if (nextQty > 10000) {
-        return handleError("Cart quantity exceeds maximum allowed", 400);
       } else {
-        cart[cleanId] = nextQty;
-        console.log("[cart/update] Added to cart:", {
+        cart[cleanId] = quantityNum;
+        console.log("[cart/update] Set product quantity:", {
           prodId,
-          quantity: nextQty,
+          quantity: quantityNum,
         });
       }
     }
