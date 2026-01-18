@@ -9,7 +9,7 @@ import ProductCard from "@/components/ProductCard";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Loading from "@/components/Loading";
 import { useAppContext } from "@/context/AppContext";
 import React from "react";
@@ -20,6 +20,8 @@ import { useUser } from "@clerk/nextjs";
 const Product = () => {
   const { id } = useParams();
   const { user: clerkUser } = useUser();
+  const searchParams = useSearchParams();
+  const openReview = searchParams?.get("review") === "1";
 
   const { products, router, addToCart, fetchProductData } = useAppContext();
 
@@ -29,6 +31,7 @@ const Product = () => {
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
   const [hasPurchased, setHasPurchased] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -52,6 +55,14 @@ const Product = () => {
         setReviews(data.reviews);
         setAverageRating(data.averageRating);
         setTotalReviews(data.totalReviews);
+
+        // Check if current user has already reviewed
+        if (clerkUser) {
+          const userReview = data.reviews.find(
+            (r) => r.userId === clerkUser.id,
+          );
+          setHasReviewed(!!userReview);
+        }
       }
     } catch (error) {
       console.error("Error fetching reviews:", error);
@@ -62,7 +73,7 @@ const Product = () => {
     if (!clerkUser) return;
     try {
       const { data } = await axios.get(
-        `/api/review/check-purchase?productId=${id}`
+        `/api/review/check-purchase?productId=${id}`,
       );
       if (data?.success) {
         setHasPurchased(data.hasPurchased);
@@ -115,6 +126,25 @@ const Product = () => {
       checkPurchase();
     }
   }, [clerkUser, id]);
+
+  // Auto-open review form if coming from My Orders with review flag
+  useEffect(() => {
+    if (clerkUser && hasPurchased && !hasReviewed && openReview) {
+      setShowReviewForm(true);
+      // Optionally scroll to the reviews section
+      try {
+        const el = document.getElementById("reviews-section");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch {}
+    } else if (clerkUser && hasReviewed && openReview) {
+      // User already reviewed, just scroll to see their review
+      toast("You've already reviewed this product", { icon: "ℹ️" });
+      try {
+        const el = document.getElementById("reviews-section");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch {}
+    }
+  }, [clerkUser, hasPurchased, hasReviewed, openReview]);
 
   return productData ? (
     <>
@@ -206,7 +236,7 @@ const Product = () => {
                   }
                   console.log(
                     "Adding to cart - productData._id:",
-                    productData?._id
+                    productData?._id,
                   );
                   const success = await addToCart(productData._id, 1);
                   if (success) {
@@ -240,12 +270,12 @@ const Product = () => {
         </div>
 
         {/* Reviews Section */}
-        <div className="max-w-4xl mx-auto mt-16">
+        <div id="reviews-section" className="max-w-4xl mx-auto mt-16">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
               Customer Reviews
             </h2>
-            {clerkUser && hasPurchased && !showReviewForm && (
+            {clerkUser && hasPurchased && !hasReviewed && !showReviewForm && (
               <button
                 onClick={() => setShowReviewForm(true)}
                 className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition"
@@ -375,7 +405,7 @@ const Product = () => {
                         <span className="text-sm text-gray-500">
                           {new Date(review.createdAt).toLocaleDateString(
                             "en-US",
-                            { year: "numeric", month: "long", day: "numeric" }
+                            { year: "numeric", month: "long", day: "numeric" },
                           )}
                         </span>
                       </div>
