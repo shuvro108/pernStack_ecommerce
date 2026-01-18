@@ -36,6 +36,8 @@ const Product = () => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecs, setLoadingRecs] = useState(false);
 
   // Local loader to derive selected product from global products list
   const loadProduct = () => {
@@ -83,6 +85,33 @@ const Product = () => {
     }
   };
 
+  const fetchRecommendations = async () => {
+    setLoadingRecs(true);
+    try {
+      const { data } = await axios.get(
+        `/api/ai/recommendations?productId=${id}&limit=5`,
+      );
+      if (data?.recommendations && data.recommendations.length > 0) {
+        setRecommendations(data.recommendations);
+      } else {
+        // Fallback to similar category products
+        const similar = products
+          .filter((p) => p.category === productData?.category && p._id !== id)
+          .slice(0, 5);
+        setRecommendations(similar);
+      }
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+      // Fallback to similar category products
+      const similar = products
+        .filter((p) => p.category === productData?.category && p._id !== id)
+        .slice(0, 5);
+      setRecommendations(similar);
+    } finally {
+      setLoadingRecs(false);
+    }
+  };
+
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     if (!clerkUser) {
@@ -120,6 +149,13 @@ const Product = () => {
     loadProduct();
     fetchReviews();
   }, [id, products.length]);
+
+  // Fetch recommendations once product is loaded
+  useEffect(() => {
+    if (productData) {
+      fetchRecommendations();
+    }
+  }, [productData?.category, id]);
 
   useEffect(() => {
     if (clerkUser && id) {
@@ -421,22 +457,34 @@ const Product = () => {
         <div className="flex flex-col items-center mt-16">
           <div className="flex flex-col items-center mb-4 mt-16">
             <p className="text-3xl font-medium">
-              Featured{" "}
-              <span className="font-medium text-emerald-900">Products</span>
+              Recommended{" "}
+              <span className="font-medium text-emerald-900">For You</span>
             </p>
             <div className="w-28 h-0.5 bg-emerald-600 mt-2"></div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mt-6 pb-14 w-full">
-            {products.slice(0, 5).map((product, index) => (
-              <ProductCard key={index} product={product} />
-            ))}
-          </div>
-          <button
-            onClick={() => router.push("/all-products")}
-            className="px-6 py-2 mb-16 border rounded text-gray-500/70 hover:bg-slate-50/90 transition"
-          >
-            See more
-          </button>
+          {loadingRecs ? (
+            <div className="flex justify-center items-center w-full h-40">
+              <div className="text-gray-500">Loading recommendations...</div>
+            </div>
+          ) : recommendations.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mt-6 pb-14 w-full">
+                {recommendations.map((product, index) => (
+                  <ProductCard key={index} product={product} />
+                ))}
+              </div>
+              <button
+                onClick={() => router.push("/all-products")}
+                className="px-6 py-2 mb-16 border rounded text-gray-500/70 hover:bg-slate-50/90 transition"
+              >
+                See more
+              </button>
+            </>
+          ) : (
+            <div className="flex justify-center items-center w-full h-40">
+              <div className="text-gray-500">No recommendations available</div>
+            </div>
+          )}
         </div>
       </div>
       <Footer />

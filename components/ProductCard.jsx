@@ -6,6 +6,18 @@ import { useAppContext } from "@/context/AppContext";
 const ProductCard = ({ product }) => {
   const { currency, router } = useAppContext();
 
+  // Handle missing product data
+  if (!product || !product._id) {
+    return null;
+  }
+
+  // Get image with fallback
+  const imageUrl =
+    product?.image?.[0] ||
+    product?.image ||
+    assets?.placeholder_image ||
+    "/placeholder.png";
+
   return (
     <div
       onClick={() => {
@@ -17,7 +29,7 @@ const ProductCard = ({ product }) => {
       {/* Image Container */}
       <div className="relative bg-gray-50 w-full aspect-square overflow-hidden">
         <Image
-          src={product.image[0]}
+          src={imageUrl}
           alt={product.name}
           className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
           width={400}

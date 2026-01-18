@@ -7,9 +7,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAppContext } from "@/context/AppContext";
 import { CATEGORIES } from "@/assets/productData";
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Loading from "@/components/Loading";
 
 const AllProducts = () => {
   const { products } = useAppContext();
@@ -24,8 +23,8 @@ const AllProducts = () => {
     setSearchQuery(q);
   }, [params]);
 
-  // Filter by category and search
-  const filteredProducts = useMemo(() => {
+  // Determine which products to display
+  const displayProducts = useMemo(() => {
     let filtered = products;
 
     // Filter by category
@@ -39,7 +38,7 @@ const AllProducts = () => {
       filtered = filtered.filter(
         (p) =>
           p.name.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query)
+          p.description.toLowerCase().includes(query),
       );
     }
 
@@ -90,23 +89,56 @@ const AllProducts = () => {
                 type="text"
                 placeholder="Search products by name or description..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all text-gray-700 placeholder:text-gray-400"
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const sp = new URLSearchParams();
+                    sp.set("q", searchQuery);
+                    router.push(`/all-products?${sp.toString()}`);
+                  }
+                }}
+                className={`w-full pl-12 pr-32 py-3 border-2 border-gray-200 rounded-lg outline-none transition-all text-gray-700 placeholder:text-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100`}
               />
-              {searchQuery && (
+              <div className="absolute inset-y-0 right-0 flex items-center gap-2 pr-3">
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery("");
+                      const sp = new URLSearchParams(params.toString());
+                      sp.delete("q");
+                      router.replace(
+                        `/all-products${sp.toString() ? `?${sp.toString()}` : ""}`,
+                      );
+                    }}
+                    className="text-gray-400 hover:text-gray-600 p-1"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
                 <button
                   onClick={() => {
-                    setSearchQuery("");
-                    const sp = new URLSearchParams(params.toString());
-                    sp.delete("q");
-                    router.replace(
-                      `/all-products${sp.toString() ? `?${sp.toString()}` : ""}`
-                    );
+                    const sp = new URLSearchParams();
+                    sp.set("q", searchQuery);
+                    router.push(`/all-products?${sp.toString()}`);
                   }}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                  className="px-4 py-2 rounded-md font-semibold text-sm transition-all bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 flex items-center gap-2"
                 >
                   <svg
-                    className="h-5 w-5"
+                    className="h-4 w-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -115,11 +147,12 @@ const AllProducts = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                     />
                   </svg>
+                  <span>Search</span>
                 </button>
-              )}
+              </div>
             </div>
           </div>
 
@@ -172,11 +205,11 @@ const AllProducts = () => {
           </div>
 
           {/* Results Count */}
-          {filteredProducts.length > 0 && (
+          {displayProducts.length > 0 && (
             <div className="mb-6">
               <p className="text-gray-600 font-medium">
-                Showing {filteredProducts.length}{" "}
-                {filteredProducts.length === 1 ? "product" : "products"}
+                Showing {displayProducts.length}{" "}
+                {displayProducts.length === 1 ? "product" : "products"}
                 {searchQuery && (
                   <span className="text-emerald-900"> for "{searchQuery}"</span>
                 )}
@@ -185,9 +218,9 @@ const AllProducts = () => {
           )}
 
           {/* Products Grid */}
-          {filteredProducts.length > 0 ? (
+          {displayProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-8 pb-8">
-              {filteredProducts.map((product, index) => (
+              {displayProducts.map((product, index) => (
                 <ProductCard key={index} product={product} />
               ))}
             </div>
@@ -237,10 +270,4 @@ const AllProducts = () => {
   );
 };
 
-export default function Page() {
-  return (
-    <Suspense fallback={<Loading />}>
-      <AllProducts />
-    </Suspense>
-  );
-}
+export default AllProducts;

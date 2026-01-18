@@ -15,6 +15,12 @@ const SideBar = () => {
     },
     { name: "Orders", path: "/seller/orders", icon: assets.order_icon },
     {
+      name: "AI Insights",
+      path: "/seller/ai-insights",
+      icon: assets.add_icon, // Using add_icon as placeholder - you can add a custom AI icon
+      badge: "AI",
+    },
+    {
       name: "Newsletter",
       path: "/seller/send-newsletter",
       icon: assets.email_icon || assets.add_icon,
@@ -52,19 +58,38 @@ const SideBar = () => {
                     : "bg-gray-100 group-hover:bg-gray-200"
                 }`}
               >
-                <Image
-                  src={item.icon}
-                  alt={`${item.name.toLowerCase()}_icon`}
-                  className="w-5 h-5 object-contain"
-                />
+                {item.badge === "AI" ? (
+                  <svg
+                    className={`w-5 h-5 ${isActive ? "text-emerald-700" : "text-gray-600"}`}
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path>
+                  </svg>
+                ) : (
+                  <Image
+                    src={item.icon}
+                    alt={`${item.name.toLowerCase()}_icon`}
+                    className="w-5 h-5 object-contain"
+                  />
+                )}
               </div>
-              <p
-                className={`md:block hidden font-medium text-sm transition-all ${
-                  isActive ? "text-emerald-700 font-semibold" : "text-gray-700"
-                }`}
-              >
-                {item.name}
-              </p>
+              <div className="flex items-center gap-2 flex-1">
+                <p
+                  className={`md:block hidden font-medium text-sm transition-all ${
+                    isActive
+                      ? "text-emerald-700 font-semibold"
+                      : "text-gray-700"
+                  }`}
+                >
+                  {item.name}
+                </p>
+                {item.badge && (
+                  <span className="hidden md:inline-block px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold rounded-full">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
             </div>
           </Link>
         );
